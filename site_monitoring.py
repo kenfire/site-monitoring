@@ -6,9 +6,9 @@
 # See the file `LICENSE` for details.
 
 import sys
+import json
 from monitor import monitor
 from kafka import KafkaProducer
-import json
 
 
 def main():

@@ -13,17 +13,20 @@ headers = {
 
 
 class Monitor(object):
-    def __init__(self, url):
+    def __init__(self, url=None, http_status=None, response_time=None, page_content=None):
         self.url = url
-        self.http_status = None
-        self.response_time = None
-        self.page_content = None
+        self.http_status = http_status
+        self.response_time = response_time
+        self.page_content = page_content
 
     def __repr__(self):
         return 'Monitor()'
 
     def __str__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
+
+    def decode_json(self, dct):
+        return Monitor(dct["url"], dct["http_status"], dct["response_time"], dct["page_content"])
 
     def fetch(self):
         try:

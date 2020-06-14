@@ -7,6 +7,8 @@
 
 import sys
 from monitor import monitor
+from kafka import KafkaProducer
+import json
 
 
 def main():
@@ -15,6 +17,22 @@ def main():
 
     _monitor = monitor.Monitor('https://duckduckgo.com')
     _monitor.fetch()
+
+    producer = KafkaProducer(
+        bootstrap_servers="kafka-site-monitoring-kenzo-134a.aivencloud.com:16845",
+        security_protocol="SSL",
+        ssl_cafile="ca.pem",
+        ssl_certfile="service.cert",
+        ssl_keyfile="service.key",
+    )
+
+    message = json.dumps(_monitor.__dict__, indent=4)
+    print("Sending: ", format(message))
+    producer.send("monitoring", message.encode("utf-8"))
+
+    # Force sending of all messages
+
+    producer.flush()
 
 
 if __name__ == '__main__':

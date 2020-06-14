@@ -4,7 +4,10 @@ Website monitoring using Python / Kafka / PostgreSQL with Aiven
 
 # Dependencies
 
-`pip3 install requests`
+```bash
+pip3 install requests ;
+pip3 install kafka-python
+```
 
 # Ressources used
 

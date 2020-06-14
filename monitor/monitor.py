@@ -6,6 +6,11 @@
 # See the file `LICENSE` for details.
 import requests
 
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
+    'Pragma': 'no-cache'
+}
+
 
 class Monitor(object):
     def __init__(self, url):
@@ -13,10 +18,6 @@ class Monitor(object):
         self.http_status = None
         self.response_time = None
         self.page_content = None
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
-            'Pragma': 'no-cache'
-        }
 
     def __repr__(self):
         return 'Monitor()'
@@ -27,7 +28,7 @@ class Monitor(object):
     def fetch(self):
         try:
             print('Processing... ', self.url)
-            response = requests.get(self.url, headers=self.headers)
+            response = requests.get(self.url, headers=headers)
 
         except Exception as e:
             print('Exception occured while fetching data')
@@ -37,5 +38,3 @@ class Monitor(object):
             self.http_status = response.status_code
             self.response_time = response.elapsed.total_seconds()
             self.page_content = response.text
-
-            print(self)

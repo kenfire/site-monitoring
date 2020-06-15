@@ -1,0 +1,11 @@
+{
+  "kafka": {
+    "kafka_url": "kafka-site-monitoring-kenzo-134a.aivencloud.com:16845",
+    "ssl_ca_file": "ca.pem",
+    "ssl_access_certificate_file": "service.cert",
+    "ssl_access_key_file": "service.key"
+  },
+  "database": {
+    "uri": "postgres://<user>:<password>@pg-site-monitoring-kenzo-134a.aivencloud.com:16843/site_monitoring?sslmode=require"
+  }
+}

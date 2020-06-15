@@ -6,7 +6,9 @@ Website monitoring using Python / Kafka / PostgreSQL with Aiven
 
 ```bash
 pip3 install requests ;
-pip3 install kafka-python
+pip3 install kafka-python ;
+pip3 install psycopg2;
+pip3 install argparse
 ```
 
 # Ressources used

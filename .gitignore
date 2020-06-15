@@ -132,3 +132,5 @@ dmypy.json
 *.pem
 *.cert
 *.key
+
+myconfig.json

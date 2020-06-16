@@ -15,20 +15,26 @@ from argparse import ArgumentParser
 
 
 def main():
+    # Ensure Python version
     if sys.version_info < (3, 0):
         print('Please use python 3 to run this program')
 
+    # Get arguments from execution
     parser = ArgumentParser()
     parser.add_argument("-c", "--config", required=True,
                         help="Path to config file")
     args = parser.parse_args()
 
+    # Read configuration file
     with open(args.config) as fh:
         config_file = json.load(fh)
 
     uri = config_file.get("database", {})["uri"]
     db_conn = psycopg2.connect(uri)
+
     c = db_conn.cursor(cursor_factory=RealDictCursor)
+
+    # Initialise table
     c.execute('''CREATE TABLE IF NOT EXISTS monitoring (
         id serial PRIMARY KEY, 
         url varchar,
@@ -38,6 +44,7 @@ def main():
     );''')
 
     kafka_config = config_file.get("kafka", {})
+    # Initialise kafka consumer
     consumer = KafkaConsumer(
         "monitoring",
         auto_offset_reset="earliest",
@@ -53,32 +60,29 @@ def main():
 
     # Call poll twice. First call will just assign partitions for our
     # consumer without actually returning anything
-
     for _ in range(2):
         raw_msgs = consumer.poll(timeout_ms=1000)
         for tp, msgs in raw_msgs.items():
             for msg in msgs:
                 data = json.loads(msg.value.decode('utf-8'))
+                print("data", data, "\n\n")
                 monitored_site = monitor.Monitor().decode_json(data)
 
                 print("Received: ", json.dumps(
                     monitored_site.__dict__, indent=4)
                 )
 
-                # Execute a command: this creates a new table
+                # Insert monitoring data
+                c.execute('''INSERT INTO monitoring(url, http_status, response_time, page_content) VALUES (%s, %s,%s, %s)''',
+                          (monitored_site.url, monitored_site.http_status, monitored_site.response_time, monitored_site.page_content))
 
-                c.execute("INSERT INTO monitoring(url, http_status, response_time, page_content) VALUES (%s, %s,%s, %s)",
-                          (monitored_site.url, monitored_site.http_status,
-                           monitored_site.response_time, monitored_site.page_content)
-                          )
-
+                # Check if the data is correctory added
                 c.execute("SELECT * FROM monitoring;")
-                print(c.fetchone())
+                print(c.fetchall())
 
                 db_conn.commit()
 
     # Commit offsets so we won't get the same messages again
-
     consumer.commit()
 
     # Close communication with the database

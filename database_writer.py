@@ -12,6 +12,7 @@ from monitor import monitor
 from kafka import KafkaConsumer
 from psycopg2.extras import RealDictCursor
 from argparse import ArgumentParser
+from database.database import Database
 
 
 def main():
@@ -23,6 +24,8 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("-c", "--config", required=True,
                         help="Path to config file")
+    parser.add_argument("-i", "--interval", required=False, default=1,
+                        help="Time interval in seconds to polling data")
     args = parser.parse_args()
 
     # Read configuration file
@@ -30,18 +33,8 @@ def main():
         config_file = json.load(fh)
 
     uri = config_file.get("database", {})["uri"]
-    db_conn = psycopg2.connect(uri)
-
-    c = db_conn.cursor(cursor_factory=RealDictCursor)
-
-    # Initialise table
-    c.execute('''CREATE TABLE IF NOT EXISTS monitoring (
-        id serial PRIMARY KEY, 
-        url varchar,
-        http_status int ,
-        response_time float,
-        page_content varchar
-    );''')
+    db = Database(uri)
+    db.init_table()
 
     kafka_config = config_file.get("kafka", {})
     # Initialise kafka consumer
@@ -72,22 +65,15 @@ def main():
                     monitored_site.__dict__, indent=4)
                 )
 
-                # Insert monitoring data
-                c.execute('''INSERT INTO monitoring(url, http_status, response_time, page_content) VALUES (%s, %s,%s, %s)''',
-                          (monitored_site.url, monitored_site.http_status, monitored_site.response_time, monitored_site.page_content))
-
+                db.store(monitored_site)
                 # Check if the data is correctory added
-                c.execute("SELECT * FROM monitoring;")
-                print(c.fetchall())
-
-                db_conn.commit()
+                db.print_all()
 
     # Commit offsets so we won't get the same messages again
     consumer.commit()
 
     # Close communication with the database
-    c.close()
-    db_conn.close()
+    db.stop()
 
 
 if __name__ == '__main__':

@@ -17,12 +17,13 @@ install:
 	pip3 install argparse ;
 	pip3 install pytest ;
 	pip3 install coverage
-
 producer:
-	$(PYTHON) site_monitoring.py -c myconfig.json -t 'https://duckduckgo.com'
+	$(PYTHON) site_monitoring.py -c myconfig.json -t "https://duckduckgo.com" -i 10
 
 consumer:
 	$(PYTHON) database_writer.py -c myconfig.json  
+
+.PHONY: test coverage install producer consumer
 
 
 

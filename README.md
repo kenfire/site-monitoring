@@ -2,6 +2,8 @@
 
 Website monitoring using Python / Kafka / PostgreSQL with Aiven
 
+Two Python program one producer and the other consumer uses kafka to fetch data from a website and stores it in a PosgreSQL database.
+
 <img src="./diagram.svg">
 
 # Installation
@@ -84,7 +86,11 @@ Start the consumer:
 make consumer
 ```
 
-# Dependencies
+## Guide
+
+To see this project at work you can open a 2 terminal and start the producer on one terminal and the consumer on the other one.
+
+## Dependencies
 
 ```bash
 pip3 install requests ;
@@ -112,3 +118,5 @@ pip3 install coverage
 
 - https://towardsdatascience.com/30-python-best-practices-tips-and-tricks-caefb9f8c5f5
 - https://towardsdatascience.com/getting-started-with-apache-kafka-in-python-604b3250aa05
+
+This project is released under the [GNU General Public License, Version 3](LICENSE).

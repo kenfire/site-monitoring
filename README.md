@@ -1,6 +1,88 @@
-# site-monitoring
+# Website monitoring
 
 Website monitoring using Python / Kafka / PostgreSQL with Aiven
+
+<img src="./diagram.svg">
+
+# Installation
+
+To simplify the installation a makefile is available.
+
+Using `make install` will install all the dependencies needed with pip3.
+
+Please ensure to have Python3 and pip3 installed on your machine.
+
+# Configuration
+
+Configuration file example
+
+`config.json`
+
+```json
+{
+  "kafka": {
+    "kafka_url": "kafka-site-monitoring-kenzo-134a.aivencloud.com:16845",
+    "ssl_ca_file": "ca.pem",
+    "ssl_access_certificate_file": "service.cert",
+    "ssl_access_key_file": "service.key"
+  },
+  "database": {
+    "uri": "postgres://<user>:<password>@pg-site-monitoring-kenzo-134a.aivencloud.com:16843/site_monitoring?sslmode=require"
+  }
+}
+```
+
+# Usage
+
+## Producer
+
+```bash
+# Argument description
+python3 site_monitoring.py -h
+
+# Execution
+python3 site_monitoring.py -c <configuration_file> -t <website_url> -i <polling_interval>
+```
+
+## Consumer
+
+```bash
+# Argument description
+python3 database_writer.py -h
+
+# Execution
+python3 database_writer.py -c <configuration_file>
+```
+
+## Tests
+
+Execute unit tests:
+
+```bash
+make test
+```
+
+Execute test coverage report
+
+```bash
+make coverage
+```
+
+## Sample
+
+To run sample scripts, commands have been incorporated in the make file as such you can:
+
+Start the producer:
+
+```bash
+make producer
+```
+
+Start the consumer:
+
+```bash
+make consumer
+```
 
 # Dependencies
 
@@ -9,7 +91,8 @@ pip3 install requests ;
 pip3 install kafka-python ;
 pip3 install psycopg2 ;
 pip3 install argparse ;
-pip3 install pytest
+pip3 install pytest ;
+pip3 install coverage
 ```
 
 # Ressources used

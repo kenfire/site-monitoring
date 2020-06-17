@@ -7,7 +7,8 @@
 
 import sys
 import json
-from monitor import monitor
+import time
+from monitor.monitor import Monitor
 from kafka import KafkaProducer
 from argparse import ArgumentParser
 
@@ -23,6 +24,8 @@ def main():
                         help="Target website to monitor")
     parser.add_argument("-c", "--config", required=True,
                         help="Path to config file")
+    parser.add_argument("-i", "--interval", required=False, default=1,
+                        help="Time interval in seconds to polling data")
     args = parser.parse_args()
 
     # Read configuration file
@@ -40,16 +43,21 @@ def main():
         ssl_keyfile=kafka_config['ssl_access_key_file'],
     )
 
-    _monitor = monitor.Monitor(args.target)
-    _monitor.fetch()
+    while True:
+        monitor = Monitor(args.target)
+        monitor.fetch()
 
-    # Format monitoring data into JSON
-    message = json.dumps(_monitor.__dict__, indent=4)
-    print("Sending: ", format(message))
-    producer.send("monitoring", message.encode("utf-8"))
+        # Format monitoring data into JSON
+        message = json.dumps(monitor.__dict__, indent=4)
+        print("Sending: ", format(message))
+        producer.send("monitoring", message.encode("utf-8"))
 
-    # Force sending of all messages
-    producer.flush()
+        # Force sending of all messages
+        producer.flush()
+
+        zzz = float(args.interval)
+        print("sleeping for {} seconds Zzz...".format(zzz))
+        time.sleep(zzz)
 
 
 if __name__ == '__main__':

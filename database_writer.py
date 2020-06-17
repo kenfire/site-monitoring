@@ -7,12 +7,22 @@
 
 import sys
 import json
+import time
 import psycopg2
+from datetime import datetime
 from monitor import monitor
 from kafka import KafkaConsumer
 from psycopg2.extras import RealDictCursor
 from argparse import ArgumentParser
 from database.database import Database
+
+
+def datetime_JSON(dt):
+    '''
+    JSON encoder for datetime
+    '''
+    if isinstance(dt, datetime):
+        return dt.__str__()
 
 
 def main():
@@ -40,10 +50,10 @@ def main():
     # Initialise kafka consumer
     consumer = KafkaConsumer(
         "monitoring",
-        auto_offset_reset="earliest",
+        auto_offset_reset="latest",
         bootstrap_servers=kafka_config["kafka_url"],
-        client_id="demo-client-1",
-        group_id="demo-group",
+        client_id="consumer-client-1",
+        group_id="consumer-group",
         security_protocol="SSL",
         ssl_cafile=kafka_config['ssl_ca_file'],
         ssl_certfile=kafka_config['ssl_access_certificate_file'],
@@ -51,27 +61,34 @@ def main():
         api_version=(0, 10)
     )
 
-    # Call poll twice. First call will just assign partitions for our
-    # consumer without actually returning anything
-    for _ in range(2):
-        raw_msgs = consumer.poll(timeout_ms=1000)
-        for tp, msgs in raw_msgs.items():
-            for msg in msgs:
-                data = json.loads(msg.value.decode('utf-8'))
-                print("data", data, "\n\n")
-                monitored_site = monitor.Monitor().decode_json(data)
+    while True:
+        # Call poll twice. First call will just assign partitions for our
+        # consumer without actually returning anything
+        for _ in range(2):
+            raw_msgs = consumer.poll(timeout_ms=1000)
+            for tp, msgs in raw_msgs.items():
+                for msg in msgs:
+                    data = json.loads(msg.value.decode('utf-8'))
+                    monitored_site = monitor.Monitor().decode_json(data)
+                    if monitored_site.page_content is not None:
+                        site_dict = monitored_site.__dict__
+                        site_dict["page_content"] = site_dict["page_content"][:60]
+                        print("date_time= ", site_dict["date_time"])
+                        site_dict["date_time"] = datetime.fromtimestamp(
+                            site_dict["date_time"])
+                        print("Received: ", json.dumps(
+                            site_dict, indent=4, default=datetime_JSON)
+                        )
 
-                print("Received: ", json.dumps(
-                    monitored_site.__dict__, indent=4)
-                )
+                        db.store(monitored_site)
+                        # Check if the data is correctory added
+                        # db.print_all()
 
-                db.store(monitored_site)
-                # Check if the data is correctory added
-                db.print_all()
-
-    # Commit offsets so we won't get the same messages again
-    consumer.commit()
-
+        # Commit offsets so we won't get the same messages again
+        consumer.commit()
+        zzz = float(args.interval)
+        print("sleeping for {} seconds Zzz...".format(zzz))
+        time.sleep(zzz)
     # Close communication with the database
     db.stop()
 
